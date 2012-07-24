@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+    <h1>Bulk Account Update</h1>
+    <div class="explanation"><h3>Create and update many accounts at once.</h3></div>
+
+    <div id="task_progress">
+        <p class="loading">Updating user accounts in bulk</p>
+        <p class="loading progress_percentage"></p>
+        <p class="loading progress_estimate">
+            Waiting for an available bulk update worker.
+            This might take several minutes if many other people are running reports
+            or performing uploads.
+        </p>
+    </div>
+
+    <table id="upload_success_results" style="display: none; width: 100%"></table>
+    <table id="csv_validation_errors" style="display: none; width: 100%"></table>
+
+    <script>
+        var djceleryConfigs = {
+            taskId: "1",
+            selector: '#task_progress',
+            failureCallback: function (task) {
+                $('#bulk_account_update_form').show();
+            },
+            table: {
+                success: {
+                    resultsTable: "#upload_success_results",
+                    captionCallback: function (parsedResult) {
+                        return "Bulk update completed successfully";
+                    },
+                    columns: [
+                                 ["Users Created", "created"],
+                                 ["Users Updated", "updated"]
+                    ],
+                    options: {
+                        'bFilter': false,
+                        'bInfo': false,
+                        'bLengthChange': false,
+                        'bPaginate': false,
+                        'bSort': false
+                    },
+                    callback: function () {
+                        $('#bulk_account_update_form').show();
+                    }
+                },
+                error: {
+                    resultsTable: "#csv_validation_errors",
+                    captionCallback: function (parsedResult) {
+                        var msg = "There are <strong>";
+                        msg += parsedResult.rowData.length;
+                        msg += "</strong> problem(s) with your CSV file.";
+                        return msg;
+                    },
+                    columns: [
+                                 ["Row", "row"],
+                                 ["Problem", "message"],
+                                 ["Content", "record"]
+                    ],
+                    options: {
+                        'iDisplayLength': 50
+                    },
+                    callback: function () {
+                        $('#task_progress').before(
+                              '<div class="error">' +
+                                  'Please correct these problems and try again' +
+                              '</div>'
+                        );
+                        $('#bulk_account_update_form').show();
+                    }
+                }
+            }
+        };
+    </script>
+</body>
+</html>
